@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:6
+    container_name: kmti-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password123
+
+  backend:
+    build: .
+    container_name: kmti-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongodb
+    environment:
+      MONGODB_URI: mongodb://admin:password123@mongodb:27017/kmti_data_management?authSource=admin
+      JWT_SECRET: your-production-jwt-secret
+      NODE_ENV: production
+    volumes:
+      - ./uploads:/app/uploads
+
+volumes:
+  mongodb_data:
