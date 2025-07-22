@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "../contexts/UseAuth";
+import { useAuth } from "../contexts/useAuth";
 import Button from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import toast from "react-hot-toast";
+import axios from "axios";
 
 export const Login: React.FC = () => {
+  console.log("Login component rendered"); // Add this line
   const { login, isAuthenticated, isAdmin } = useAuth();
   const [credentials, setCredentials] = useState({
     username: "",
@@ -32,11 +34,14 @@ export const Login: React.FC = () => {
     try {
       await login(credentials.username, credentials.password);
       toast.success("Login successful!");
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        toast.error(error.message);
+    } catch (error) {
+      console.error("Login error:", error);
+      if (axios.isAxiosError(error)) {
+        const errorMessage =
+          error.response?.data?.message || "Server error occurred";
+        toast.error(`Login failed: ${errorMessage}`);
       } else {
-        toast.error("Login failed");
+        toast.error("An unexpected error occurred");
       }
     } finally {
       setLoading(false);

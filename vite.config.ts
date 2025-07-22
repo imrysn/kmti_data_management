@@ -11,4 +11,8 @@ export default defineConfig({
       plugins: [tailwind()],
     },
   },
+  server: {
+    port: 5173,
+    open: true,
+  },
 });
