@@ -12,7 +12,11 @@ interface FileWithPreview extends File {
   id: string;
 }
 
-export const FileUpload: React.FC = () => {
+interface FileUploadProps {
+  onFilesUploaded: (files: File[]) => void;
+}
+
+export const FileUpload: React.FC<FileUploadProps> = ({ onFilesUploaded }) => {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [uploading, setUploading] = useState(false);
   const [metadata, setMetadata] = useState({
@@ -50,30 +54,14 @@ export const FileUpload: React.FC = () => {
     }
 
     setUploading(true);
-    let successCount = 0;
-    let errorCount = 0;
-
-    for (const file of files) {
-      try {
-        await fileService.uploadFile(file, metadata);
-        successCount++;
-      } catch (error) {
-        errorCount++;
-        console.error("Upload error:", error);
-      }
-    }
-
-    setUploading(false);
-
-    if (successCount > 0) {
-      toast.success(`${successCount} file(s) uploaded successfully`);
+    // Simulate upload, then call callback
+    setTimeout(() => {
+      onFilesUploaded(files);
+      setUploading(false);
       setFiles([]);
       setMetadata({ description: "", tags: "", version: "", project: "" });
-    }
-
-    if (errorCount > 0) {
-      toast.error(`${errorCount} file(s) failed to upload`);
-    }
+      toast.success(`${files.length} file(s) uploaded`);
+    }, 1000);
   };
 
   const formatFileSize = (bytes: number) => {

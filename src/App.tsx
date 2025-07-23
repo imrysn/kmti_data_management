@@ -7,6 +7,7 @@ import { Layout } from "./components/Layout/Layout";
 
 // Pages
 import { Login } from "./pages/Login";
+import  AdminLogin  from "./pages/admin/AdminLogin";
 import { Dashboard } from "./pages/Dashboard";
 import { Upload } from "./pages/Upload";
 import { Files } from "./pages/Files";
@@ -113,6 +114,8 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route path="/admin/AdminLogin" element={<AdminLogin />} />
 
           {/* Default Redirect */}
           <Route path="/" element={<Navigate to="/login" replace />} />

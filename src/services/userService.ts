@@ -22,6 +22,7 @@ export const updateUser = async (
     email?: string;
     role?: string;
     isActive?: boolean;
+    fullName?: string;
   }
 ): Promise<{ message: string; user: User }> => {
   const response = await api.put(`/users/${id}`, userData);

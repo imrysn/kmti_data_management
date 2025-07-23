@@ -3,7 +3,6 @@ import type { User } from "../types";
 
 export interface LoginResponse {
   message: string;
-  token: string;
   user: User;
 }
 
@@ -15,29 +14,24 @@ export const login = async (
   return response.data;
 };
 
-export const logout = async (token: string): Promise<void> => {
-  await api.post(
-    "/auth/logout",
-    {},
-    {
-      headers: { Authorization: `Bearer ${token}` },
-    }
-  );
+export const logout = async (): Promise<void> => {
+  await api.post("/auth/logout");
 };
 
-export const getCurrentUser = async (token: string): Promise<User> => {
-  const response = await api.get("/auth/me", {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export const getCurrentUser = async (): Promise<User> => {
+  const response = await api.get("/auth/me");
   return response.data.user;
 };
 
-export const register = async (userData: {
+interface RegisterData {
   username: string;
   email: string;
   password: string;
   role?: string;
-}): Promise<{ message: string; user: User }> => {
+  fullName?: string;
+}
+
+export const register = async (userData: RegisterData): Promise<{ message: string; user: User }> => {
   const response = await api.post("/auth/register", userData);
   return response.data;
 };

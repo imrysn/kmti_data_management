@@ -1,47 +1,54 @@
 import React from "react";
-import { useAuth } from "../../contexts/UseAuth";
-import { LogOut, User } from "lucide-react";
-import Button from "../ui/button";
+import { useAuth } from "../../contexts/useAuth";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export const Header: React.FC = () => {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const handleLogout = async () => {
     try {
       await logout();
+      navigate("/login");
     } catch (error) {
       console.error("Logout failed:", error);
     }
   };
 
+  // Navigation items with path and label
+  const navItems = [
+    { path: "/admin/files", label: "Data Management" },
+    { path: "/admin/users", label: "User Management" },
+    { path: "/admin/activity", label: "Activity Logs" },
+    { path: "/admin/dashboard", label: "System Settings" },
+  ];
+
   return (
-    <header className="bg-[#44444c] text-white px-6 py-4 shadow-lg">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <h1 className="text-xl font-semibold">KMTI Data Management</h1>
-          {isAdmin && (
-            <span className="bg-blue-600 text-xs px-2 py-1 rounded-full">
-              Admin
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center space-x-4">
-          <div className="flex items-center space-x-2">
-            <User className="w-4 h-4" />
-            <span className="text-sm">{user?.username}</span>
-          </div>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleLogout}
-            className="text-white hover:bg-white/10"
+    <header className="bg-[#44444c] text-white px-6 h-[40px] flex items-center justify-between w-full">
+      <nav className="flex space-x-8">
+        {navItems.map((item) => (
+          <a
+            key={item.path}
+            href={item.path}
+            className={`text-sm ${
+              location.pathname === item.path ? "underline" : ""
+            }`}
           >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
-        </div>
+            {item.label}
+          </a>
+        ))}
+      </nav>
+      <div className="flex items-center space-x-8">
+        <span className="text-white text-sm">
+          Hi, {user?.username || "User"}
+        </span>
+        <button
+          className="text-white text-sm"
+          onClick={handleLogout}
+        >
+          Logout
+        </button>
       </div>
     </header>
   );

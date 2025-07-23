@@ -1,5 +1,4 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const ActivityLog = require("../models/ActivityLog");
 const { auth } = require("../middleware/auth");
@@ -9,7 +8,7 @@ const router = express.Router();
 // Register
 router.post("/register", async (req, res) => {
   try {
-    const { username, email, password, role } = req.body;
+    const { username, email, password, role, fullName } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -28,6 +27,7 @@ router.post("/register", async (req, res) => {
       email,
       password,
       role: role || "user",
+      fullName,
     });
 
     await user.save();
@@ -70,13 +70,6 @@ router.post("/login", async (req, res) => {
     user.lastLogin = new Date();
     await user.save();
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user._id, role: user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    );
-
     // Log activity
     await ActivityLog.create({
       userId: user._id,
@@ -89,10 +82,10 @@ router.post("/login", async (req, res) => {
 
     res.json({
       message: "Login successful",
-      token,
       user: user.toJSON(),
     });
   } catch (error) {
+    console.error("Login error:", error);
     res.status(500).json({ message: error.message });
   }
 });

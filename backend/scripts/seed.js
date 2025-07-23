@@ -9,7 +9,7 @@ async function seedDatabase() {
     // Connect to MongoDB
     await mongoose.connect(
       process.env.MONGODB_URI ||
-        "mongodb://localhost:27017/kmti_data_management"
+        "mongodb+srv://imrays23:Raysan091021@cluster0.5y1ejov.mongodb.net/kmti_data_management"
     );
     console.log("Connected to MongoDB");
 

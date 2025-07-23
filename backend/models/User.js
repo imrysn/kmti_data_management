@@ -35,6 +35,10 @@ const userSchema = new mongoose.Schema(
     lastLogin: {
       type: Date,
     },
+    fullName: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true,

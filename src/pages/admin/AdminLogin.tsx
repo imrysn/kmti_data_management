@@ -1,14 +1,14 @@
 import React, { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/useAuth";
-import Button from "../components/ui/button";
-import { Card, CardContent } from "../components/ui/card";
-import { Input } from "../components/ui/input";
+import { useAuth } from "../../contexts/useAuth";
+import Button from "../../components/ui/button";
+import { Card, CardContent } from "../../components/ui/card";
+import { Input } from "../../components/ui/input";
 import toast from "react-hot-toast";
 import axios from "axios";
-import KMTILogo from "../assets/kmti-logo.png"; 
+import KMTILogo from "../../assets/kmti-logo.png";
 
-export const Login: React.FC = () => {
+const AdminLogin: React.FC = () => {
   const { login, isAuthenticated, isAdmin } = useAuth();
   const [credentials, setCredentials] = useState({
     username: "",
@@ -17,10 +17,11 @@ export const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  if (isAuthenticated) {
-    return (
-      <Navigate to={isAdmin ? "/admin/dashboard" : "/dashboard"} replace />
-    );
+  if (isAuthenticated && isAdmin) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+  if (isAuthenticated && !isAdmin) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,7 +61,7 @@ export const Login: React.FC = () => {
       {/* Logo */}
       <img
         className="w-[211px] h-[211px] mt-[120px] mb-2 object-cover"
-        alt="KMTI"
+        alt="KMTI logo"
         src={KMTILogo}
         style={{ zIndex: 1 }}
       />
@@ -74,7 +75,7 @@ export const Login: React.FC = () => {
           >
             {/* Card Title */}
             <div className="[font-family:'Archivo',Helvetica] font-medium text-black text-2xl mb-6 mt-8">
-              USER
+              ADMINISTRATOR
             </div>
 
             {/* Username Input */}
@@ -131,18 +132,18 @@ export const Login: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Login as Administrator Link */}
+      {/* Login as User Link */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
         <button
           type="button"
           className="[font-family:'Archivo',Helvetica] text-black text-sm underline hover:text-blue-700"
-          onClick={() => navigate("/admin/AdminLogin")}
+          onClick={() => navigate("/login")}
           style={{ background: "none", border: "none" }}
         >
-          Login as Administrator
+          Login as User
         </button>
       </div>
     </div>
-  );
-};
-export default Login;
+    );
+}
+export default AdminLogin;

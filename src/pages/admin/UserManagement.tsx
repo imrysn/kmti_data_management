@@ -7,6 +7,8 @@ import {
   Search,
   Shield,
   ShieldCheck,
+  KeyRound,
+  UserCog,
 } from "lucide-react";
 import Button from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -29,6 +31,8 @@ export const UserManagement: React.FC = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [assignRolesMode, setAssignRolesMode] = useState(false);
+  const [resetPasswordMode, setResetPasswordMode] = useState(false);
 
   const loadUsers = useCallback(async () => {
     try {
@@ -86,6 +90,29 @@ export const UserManagement: React.FC = () => {
     }
   };
 
+  // Handle role change directly in table
+  const handleRoleChange = async (user: User, newRole: string) => {
+    try {
+      await userService.updateUser(user._id, { role: newRole });
+      toast.success("Role updated successfully");
+      loadUsers();
+    } catch (error: unknown) {
+      toast.error("Failed to update role");
+    }
+  };
+
+  // Handle password reset directly in table
+  const handleResetPassword = async (user: User) => {
+    try {
+      // Use the correct function name from userService
+      await userService.resetUserPassword(user._id, "newPassword123"); // You may want to prompt for a new password or generate one
+      toast.success("Password reset successfully");
+      loadUsers();
+    } catch (error: unknown) {
+      toast.error("Failed to reset password");
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -112,11 +139,32 @@ export const UserManagement: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
           <p className="text-gray-600">Manage system users and permissions</p>
         </div>
-
-        <Button onClick={() => setShowCreateModal(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add User
-        </Button>
+        <div className="flex space-x-2">
+          <Button onClick={() => setShowCreateModal(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add User
+          </Button>
+          <Button
+            variant={assignRolesMode ? "default" : "outline"}
+            onClick={() => {
+              setAssignRolesMode((prev) => !prev);
+              setResetPasswordMode(false);
+            }}
+          >
+            <UserCog className="w-4 h-4 mr-2" />
+            Assign Roles
+          </Button>
+          <Button
+            variant={resetPasswordMode ? "default" : "outline"}
+            onClick={() => {
+              setResetPasswordMode((prev) => !prev);
+              setAssignRolesMode(false);
+            }}
+          >
+            <KeyRound className="w-4 h-4 mr-2" />
+            Reset Password
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -148,41 +196,22 @@ export const UserManagement: React.FC = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left py-3 px-4">User</th>
-                    <th className="text-left py-3 px-4">Role</th>
+                    <th className="text-left py-3 px-4">Full Name</th>
+                    <th className="text-left py-3 px-4">Email</th>
+                    <th className="text-left py-3 px-4">Username</th>
                     <th className="text-left py-3 px-4">Status</th>
-                    <th className="text-left py-3 px-4">Last Login</th>
-                    <th className="text-left py-3 px-4">Created</th>
+                    <th className="text-left py-3 px-4">Password</th>
+                    <th className="text-left py-3 px-4">Role</th>
+                    <th className="text-left py-3 px-4">Join Date</th>
                     <th className="text-right py-3 px-4">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {users.map((user) => (
                     <tr key={user._id} className="border-b hover:bg-gray-50">
-                      <td className="py-4 px-4">
-                        <div>
-                          <p className="font-medium">{user.username}</p>
-                          <p className="text-sm text-gray-500">{user.email}</p>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center space-x-2">
-                          {user.role === "admin" ? (
-                            <ShieldCheck className="w-4 h-4 text-red-600" />
-                          ) : (
-                            <Shield className="w-4 h-4 text-blue-600" />
-                          )}
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              user.role === "admin"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-blue-100 text-blue-700"
-                            }`}
-                          >
-                            {user.role}
-                          </span>
-                        </div>
-                      </td>
+                      <td className="py-4 px-4">{user.fullName || "-"}</td>
+                      <td className="py-4 px-4">{user.email}</td>
+                      <td className="py-4 px-4">{user.username}</td>
                       <td className="py-4 px-4">
                         <span
                           className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -194,8 +223,32 @@ export const UserManagement: React.FC = () => {
                           {user.isActive ? "Active" : "Inactive"}
                         </span>
                       </td>
-                      <td className="py-4 px-4 text-sm text-gray-500">
-                        {user.lastLogin ? formatDate(user.lastLogin) : "Never"}
+                      <td className="py-4 px-4">
+                        {resetPasswordMode ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleResetPassword(user)}
+                          >
+                            Reset Password
+                          </Button>
+                        ) : (
+                          <span className="text-gray-400">••••••••</span>
+                        )}
+                      </td>
+                      <td className="py-4 px-4">
+                        {assignRolesMode ? (
+                          <select
+                            value={user.role}
+                            onChange={(e) => handleRoleChange(user, e.target.value)}
+                            className="p-2 border rounded-md"
+                          >
+                            <option value="admin">Admin</option>
+                            <option value="user">User</option>
+                          </select>
+                        ) : (
+                          <span className="capitalize">{user.role}</span>
+                        )}
                       </td>
                       <td className="py-4 px-4 text-sm text-gray-500">
                         {formatDate(user.createdAt)}
@@ -209,7 +262,6 @@ export const UserManagement: React.FC = () => {
                           >
                             <Edit className="w-3 h-3" />
                           </Button>
-
                           <Button
                             size="sm"
                             variant="outline"
@@ -222,7 +274,6 @@ export const UserManagement: React.FC = () => {
                           >
                             {user.isActive ? "Deactivate" : "Activate"}
                           </Button>
-
                           <Button
                             size="sm"
                             variant="outline"
@@ -252,11 +303,9 @@ export const UserManagement: React.FC = () => {
           >
             Previous
           </Button>
-
           <span className="flex items-center px-4 py-2 text-sm">
             Page {currentPage} of {totalPages}
           </span>
-
           <Button
             variant="outline"
             disabled={currentPage === totalPages}
@@ -299,24 +348,34 @@ const CreateUserModal: React.FC<{
   onSuccess: () => void;
 }> = ({ onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
+    fullName: "",
     username: "",
     email: "",
     password: "",
     role: "user",
+    isActive: true,
   });
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.username || !formData.email || !formData.password) {
-      toast.error("Please fill in all fields");
+    if (!formData.fullName || !formData.username || !formData.email || !formData.password) {
+      toast.error("Please fill in all required fields");
       return;
     }
 
     setLoading(true);
     try {
-      await authService.register(formData);
+      // Send all fields in one request
+      const response = await authService.register({
+        username: formData.username,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        fullName: formData.fullName, // Include fullName in the initial registration
+      });
+
       toast.success("User created successfully");
       onSuccess();
     } catch (error: unknown) {
@@ -339,6 +398,17 @@ const CreateUserModal: React.FC<{
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
+              <label className="block text-sm font-medium mb-2">Full Name</label>
+              <Input
+                value={formData.fullName}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, fullName: e.target.value }))
+                }
+                placeholder="Enter full name"
+                disabled={loading}
+              />
+            </div>
+            <div>
               <label className="block text-sm font-medium mb-2">Username</label>
               <Input
                 value={formData.username}
@@ -349,7 +419,6 @@ const CreateUserModal: React.FC<{
                 disabled={loading}
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium mb-2">Email</label>
               <Input
@@ -362,7 +431,6 @@ const CreateUserModal: React.FC<{
                 disabled={loading}
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium mb-2">Password</label>
               <Input
@@ -375,7 +443,6 @@ const CreateUserModal: React.FC<{
                 disabled={loading}
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium mb-2">Role</label>
               <select
@@ -390,7 +457,23 @@ const CreateUserModal: React.FC<{
                 <option value="admin">Admin</option>
               </select>
             </div>
-
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="isActive"
+                checked={formData.isActive}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    isActive: e.target.checked,
+                  }))
+                }
+                disabled={loading}
+              />
+              <label htmlFor="isActive" className="text-sm font-medium">
+                Active
+              </label>
+            </div>
             <div className="flex space-x-2">
               <Button type="submit" disabled={loading} className="flex-1">
                 {loading ? "Creating..." : "Create User"}
@@ -422,6 +505,7 @@ const EditUserModal: React.FC<{
     email: user.email,
     role: user.role,
     isActive: user.isActive,
+    fullName: user.fullName || "",
   });
   const [loading, setLoading] = useState(false);
 

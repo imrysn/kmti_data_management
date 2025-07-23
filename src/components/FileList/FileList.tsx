@@ -5,18 +5,33 @@ import { Input } from "../ui/input";
 import { Card, CardContent } from "../ui/card";
 import type { FileItem } from "../../types";
 import * as fileService from "../../services/fileService";
-import { useAuth } from "../../contexts/UseAuth";
+import { useAuth } from "../../contexts/useAuth";
 import toast from "react-hot-toast";
 
+// Add this type at the top if not already present
+type Folder = {
+  id: string;
+  name: string;
+  parentId?: string;
+};
+
+// Fix FileListProps to accept uploadedFiles as File[] or FileItem[]
 interface FileListProps {
-  showAllFiles?: boolean;
+  showAllFiles: boolean;
+  search: string;
+  currentFolder: Folder;
+  uploadedFiles?: File[]; // Accept File[] from AllFiles.tsx
 }
 
-export const FileList: React.FC<FileListProps> = ({ showAllFiles = false }) => {
+export const FileList: React.FC<FileListProps> = ({
+  showAllFiles,
+  search,
+  currentFolder,
+  uploadedFiles = [],
+}) => {
   const { isAdmin } = useAuth();
   const [files, setFiles] = useState<FileItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -113,6 +128,25 @@ export const FileList: React.FC<FileListProps> = ({ showAllFiles = false }) => {
     });
   };
 
+  // Convert uploadedFiles (File[]) to FileItem[] for display
+  const uploadedFileItems: FileItem[] = uploadedFiles.map((file) => ({
+    _id: file.name + file.lastModified, // Use a unique key
+    originalName: file.name,
+    fileSize: file.size,
+    createdAt: new Date(file.lastModified).toISOString(),
+    uploadedBy: { username: "You", _id: "local" },
+    downloadCount: 0,
+    metadata: {},
+  }));
+
+  // Combine API files and uploaded files
+  const filesToShow = [
+    ...files,
+    ...uploadedFileItems,
+  ].filter((file) =>
+    file.originalName.toLowerCase().includes(search.toLowerCase())
+  );
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -177,7 +211,7 @@ export const FileList: React.FC<FileListProps> = ({ showAllFiles = false }) => {
       )}
 
       {/* Files Grid/List */}
-      {files.length === 0 ? (
+      {filesToShow.length === 0 ? (
         <Card>
           <CardContent className="text-center py-12">
             <p className="text-gray-500">No files found</p>
@@ -191,7 +225,7 @@ export const FileList: React.FC<FileListProps> = ({ showAllFiles = false }) => {
               : "space-y-4"
           }
         >
-          {files.map((file) => (
+          {filesToShow.map((file) => (
             <Card key={file._id} className="hover:shadow-lg transition-shadow">
               <CardContent className="p-4">
                 {isAdmin && (
